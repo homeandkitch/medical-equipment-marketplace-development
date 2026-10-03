@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GoogleButton } from '@/components/auth/google-button'
+import { PasswordInput } from '@/components/auth/password-input'
 import { createClient } from '@/lib/supabase/client'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
@@ -53,7 +54,18 @@ export function LoginForm({ t, next }: { t: Dictionary['auth']; next: string }) 
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">{t.password}</Label>
-          <Input id="password" name="password" type="password" required autoComplete="current-password" className="h-10" />
+          <PasswordInput
+            id="password"
+            name="password"
+            required
+            autoComplete="current-password"
+            className="h-10"
+            showLabel={t.showPassword}
+            hideLabel={t.hidePassword}
+          />
+          <Link href="/forgot-password" className="self-end text-sm font-medium text-primary hover:underline">
+            {t.forgotPassword}
+          </Link>
         </div>
         {error && (
           <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">

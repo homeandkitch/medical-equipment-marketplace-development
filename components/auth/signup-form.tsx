@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GoogleButton } from '@/components/auth/google-button'
 import { RolePicker } from '@/components/auth/role-picker'
+import { PasswordInput } from '@/components/auth/password-input'
 import { createClient } from '@/lib/supabase/client'
 import { authRedirect } from '@/lib/supabase/redirect'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
@@ -93,14 +94,15 @@ export function SignupForm({ t }: { t: Dictionary['auth'] }) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">{t.password}</Label>
-              <Input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"
                 className="h-10"
+                showLabel={t.showPassword}
+                hideLabel={t.hidePassword}
               />
             </div>
             <p className="text-xs text-muted-foreground">{t.roleLocked}</p>
