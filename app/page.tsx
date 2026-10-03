@@ -1,47 +1,55 @@
-export default function Page() {
+import Link from 'next/link'
+import { HeartHandshake, ShieldCheck, Users } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
+import { getDictionary } from '@/lib/i18n/server'
+
+export default async function HomePage() {
+  const { t } = await getDictionary()
+  const trust = [
+    { Icon: ShieldCheck, title: t.home.trust1Title, body: t.home.trust1Body },
+    { Icon: Users, title: t.home.trust2Title, body: t.home.trust2Body },
+    { Icon: HeartHandshake, title: t.home.trust3Title, body: t.home.trust3Body },
+  ]
   return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
+    <main>
+      <section className="relative isolate overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/hero.jpg"
+          alt=""
+          className="absolute inset-0 -z-20 size-full object-cover"
         />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
+        <div className="absolute inset-0 -z-10 bg-background/80" />
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-24 sm:py-32">
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+            {t.home.eyebrow}
+          </span>
+          <h1 className="max-w-2xl text-4xl font-semibold text-balance sm:text-5xl">{t.home.title}</h1>
+          <p className="max-w-xl text-lg text-muted-foreground text-pretty">{t.home.subtitle}</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/listings" className={buttonVariants({ size: 'lg' })}>
+              {t.home.ctaBrowse}
+            </Link>
+            <Link href="/listings/new" className={buttonVariants({ size: 'lg', variant: 'outline' })}>
+              {t.home.ctaList}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <ul className="grid gap-5 md:grid-cols-3">
+          {trust.map(({ Icon, title, body }) => (
+            <li key={title} className="flex flex-col gap-3 rounded-2xl border bg-card p-6">
+              <span className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <h2 className="font-semibold">{title}</h2>
+              <p className="text-sm text-muted-foreground text-pretty">{body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
     </main>
   )
 }
