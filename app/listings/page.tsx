@@ -6,7 +6,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ListingCard } from '@/components/listing-card'
 import { createClient } from '@/lib/supabase/server'
 import { getDictionary } from '@/lib/i18n/server'
-import { DEVICE_TYPES, GOVERNORATES, LISTING_TYPES, type Listing } from '@/lib/types'
+import { DEVICE_TYPES, ACTIVE_GOVERNORATES, GOVERNORATES, LISTING_TYPES, type Listing } from '@/lib/types'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary()
@@ -62,7 +62,7 @@ export default async function ListingsPage({
           <Label htmlFor="governorate">{t.listings.governorate}</Label>
           <NativeSelect id="governorate" name="governorate" defaultValue={params.governorate ?? ''} className="w-full [&_select]:h-10">
             <NativeSelectOption value="">{t.listings.allGovernorates}</NativeSelectOption>
-            {GOVERNORATES.map((g) => (
+            {ACTIVE_GOVERNORATES.map((g) => (
               <NativeSelectOption key={g.id} value={g.id}>
                 {g[locale]}
               </NativeSelectOption>

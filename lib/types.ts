@@ -68,32 +68,41 @@ export const DEVICE_TYPES: DeviceType[] = [
 
 export const LISTING_TYPES: ListingType[] = ['sell', 'rent', 'donate']
 
-export const GOVERNORATES: { id: string; en: string; ar: string }[] = [
-  { id: 'cairo', en: 'Cairo', ar: 'القاهرة' },
-  { id: 'giza', en: 'Giza', ar: 'الجيزة' },
-  { id: 'alexandria', en: 'Alexandria', ar: 'الإسكندرية' },
-  { id: 'qalyubia', en: 'Qalyubia', ar: 'القليوبية' },
-  { id: 'sharqia', en: 'Sharqia', ar: 'الشرقية' },
-  { id: 'dakahlia', en: 'Dakahlia', ar: 'الدقهلية' },
-  { id: 'gharbia', en: 'Gharbia', ar: 'الغربية' },
-  { id: 'monufia', en: 'Monufia', ar: 'المنوفية' },
-  { id: 'beheira', en: 'Beheira', ar: 'البحيرة' },
-  { id: 'kafr_el_sheikh', en: 'Kafr El Sheikh', ar: 'كفر الشيخ' },
-  { id: 'damietta', en: 'Damietta', ar: 'دمياط' },
-  { id: 'port_said', en: 'Port Said', ar: 'بورسعيد' },
-  { id: 'ismailia', en: 'Ismailia', ar: 'الإسماعيلية' },
-  { id: 'suez', en: 'Suez', ar: 'السويس' },
-  { id: 'north_sinai', en: 'North Sinai', ar: 'شمال سيناء' },
-  { id: 'south_sinai', en: 'South Sinai', ar: 'جنوب سيناء' },
-  { id: 'faiyum', en: 'Faiyum', ar: 'الفيوم' },
-  { id: 'beni_suef', en: 'Beni Suef', ar: 'بني سويف' },
-  { id: 'minya', en: 'Minya', ar: 'المنيا' },
-  { id: 'asyut', en: 'Asyut', ar: 'أسيوط' },
-  { id: 'sohag', en: 'Sohag', ar: 'سوهاج' },
-  { id: 'qena', en: 'Qena', ar: 'قنا' },
-  { id: 'luxor', en: 'Luxor', ar: 'الأقصر' },
-  { id: 'aswan', en: 'Aswan', ar: 'أسوان' },
-  { id: 'red_sea', en: 'Red Sea', ar: 'البحر الأحمر' },
-  { id: 'new_valley', en: 'New Valley', ar: 'الوادي الجديد' },
-  { id: 'matrouh', en: 'Matrouh', ar: 'مطروح' },
+export interface Governorate {
+  id: string // value slug stored in listings.governorate
+  en: string
+  ar: string
+  is_active: boolean // set false to hide from selectors/filters without losing data
+}
+
+export const GOVERNORATES: Governorate[] = [
+  { id: 'cairo', en: 'Cairo', ar: 'القاهرة', is_active: true },
+  { id: 'giza', en: 'Giza', ar: 'الجيزة', is_active: true },
+  { id: 'alexandria', en: 'Alexandria', ar: 'الإسكندرية', is_active: true },
+  { id: 'qalyubia', en: 'Qalyubia', ar: 'القليوبية', is_active: true },
+  { id: 'sharqia', en: 'Sharqia', ar: 'الشرقية', is_active: true },
+  { id: 'dakahlia', en: 'Dakahlia', ar: 'الدقهلية', is_active: true },
+  { id: 'gharbia', en: 'Gharbia', ar: 'الغربية', is_active: true },
+  { id: 'monufia', en: 'Monufia', ar: 'المنوفية', is_active: true },
+  { id: 'beheira', en: 'Beheira', ar: 'البحيرة', is_active: true },
+  { id: 'kafr_el_sheikh', en: 'Kafr El Sheikh', ar: 'كفر الشيخ', is_active: true },
+  { id: 'damietta', en: 'Damietta', ar: 'دمياط', is_active: true },
+  { id: 'port_said', en: 'Port Said', ar: 'بورسعيد', is_active: true },
+  { id: 'ismailia', en: 'Ismailia', ar: 'الإسماعيلية', is_active: true },
+  { id: 'suez', en: 'Suez', ar: 'السويس', is_active: true },
+  { id: 'north_sinai', en: 'North Sinai', ar: 'شمال سيناء', is_active: true },
+  { id: 'south_sinai', en: 'South Sinai', ar: 'جنوب سيناء', is_active: true },
+  { id: 'faiyum', en: 'Faiyum', ar: 'الفيوم', is_active: true },
+  { id: 'beni_suef', en: 'Beni Suef', ar: 'بني سويف', is_active: true },
+  { id: 'minya', en: 'Minya', ar: 'المنيا', is_active: true },
+  { id: 'asyut', en: 'Asyut', ar: 'أسيوط', is_active: true },
+  { id: 'sohag', en: 'Sohag', ar: 'سوهاج', is_active: true },
+  { id: 'qena', en: 'Qena', ar: 'قنا', is_active: true },
+  { id: 'luxor', en: 'Luxor', ar: 'الأقصر', is_active: true },
+  { id: 'aswan', en: 'Aswan', ar: 'أسوان', is_active: true },
+  { id: 'red_sea', en: 'Red Sea', ar: 'البحر الأحمر', is_active: true },
+  { id: 'new_valley', en: 'New Valley', ar: 'الوادي الجديد', is_active: true },
+  { id: 'matrouh', en: 'Matrouh', ar: 'مطروح', is_active: true },
 ]
+
+export const ACTIVE_GOVERNORATES = GOVERNORATES.filter((g) => g.is_active)

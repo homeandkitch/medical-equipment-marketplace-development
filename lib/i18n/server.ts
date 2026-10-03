@@ -4,7 +4,7 @@ import { dictionaries, LOCALE_COOKIE, type Locale } from './dictionaries'
 
 export async function getLocale(): Promise<Locale> {
   const value = (await cookies()).get(LOCALE_COOKIE)?.value
-  return value === 'ar' ? 'ar' : 'en'
+  return value === 'en' ? 'en' : 'ar'
 }
 
 export async function getDictionary() {

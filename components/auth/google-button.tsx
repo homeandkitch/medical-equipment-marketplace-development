@@ -12,11 +12,15 @@ export function GoogleButton({ label, next }: { label: string; next: string }) {
   async function signIn() {
     setPending(true)
     const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: authRedirect(next) },
+      options: { redirectTo: authRedirect(next), skipBrowserRedirect: true },
     })
     setPending(false)
+    if (error || !data.url) return
+    // Google refuses to render inside an iframe (the v0 preview), so leave the frame.
+    if (window.self !== window.top) window.open(data.url, '_blank', 'noopener')
+    else window.location.assign(data.url)
   }
 
   return (

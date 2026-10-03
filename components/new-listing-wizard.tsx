@@ -12,7 +12,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { createListing } from '@/app/actions'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { DEVICE_TYPES, GOVERNORATES, type DeviceType, type ListingType } from '@/lib/types'
+import { DEVICE_TYPES, ACTIVE_GOVERNORATES, type DeviceType, type ListingType } from '@/lib/types'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
 
 const MAX_PHOTOS = 6
@@ -270,7 +270,7 @@ export function NewListingWizard({
                 <NativeSelectOption value="" disabled>
                   {n.selectGovernorate}
                 </NativeSelectOption>
-                {GOVERNORATES.map((g) => (
+                {ACTIVE_GOVERNORATES.map((g) => (
                   <NativeSelectOption key={g.id} value={g.id}>
                     {g[locale]}
                   </NativeSelectOption>

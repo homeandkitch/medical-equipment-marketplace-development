@@ -16,12 +16,23 @@ export function formatPrice(
   return type === 'rent' ? `${formatted} ${t.listings.perMonth}` : formatted
 }
 
-export function formatDate(value: string, locale: Locale) {
+export function parseTimestamp(value: string | null | undefined): Date | null {
+  if (!value) return null
+  // Timestamps without an offset are UTC in Postgres; without "Z" browsers parse them as local time.
+  const hasZone = /(Z|[+-]\d{2}(:?\d{2})?)$/.test(value)
+  const date = new Date(hasZone ? value : `${value.replace(' ', 'T')}Z`)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function formatDate(value: string | null | undefined, locale: Locale) {
+  const date = parseTimestamp(value)
+  if (!date) return locale === 'ar' ? 'قيد الانتظار' : 'Pending'
   return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG' : 'en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-  }).format(new Date(value))
+    timeZone: 'Africa/Cairo',
+  }).format(date)
 }
 
 export function governorateName(id: string, locale: Locale) {
