@@ -5,6 +5,7 @@ export type Availability = 'available' | 'rented' | 'sold' | 'donated'
 export type RequestStatus =
   | 'pending'
   | 'accepted'
+  | 'pending_seller_inspection'
   | 'rejected'
   | 'cancelled_by_buyer'
   | 'completed'

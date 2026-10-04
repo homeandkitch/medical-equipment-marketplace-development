@@ -211,6 +211,31 @@ export async function reviewListing(
   return { ok: true, id: listingId }
 }
 
+export async function createSellerCheck(input: { requestId: string; triggerType: 'post_rental_return' | 'pre_sale_handover'; cost: number; details: string }): Promise<ActionResult> {
+  const auth = await getAuthedClient()
+  if (!auth) return { ok: false, error: 'unauthenticated' }
+  const { data, error } = await auth.supabase.rpc('create_seller_check', {
+    p_request_id: input.requestId,
+    p_trigger: input.triggerType,
+    p_cost: input.cost,
+    p_details: input.details.trim(),
+  })
+  if (error || !data) return failure(error, 'not_allowed')
+  revalidateMarketplace()
+  return { ok: true, id: data as string }
+}
+
+export async function resolveDeviceCheck(checkId: string, decision: 'passed' | 'failed'): Promise<ActionResult> {
+  if (decision !== 'passed' && decision !== 'failed') return { ok: false, error: 'invalid_decision' }
+  const auth = await getAuthedClient()
+  if (!auth) return { ok: false, error: 'unauthenticated' }
+  const { data, error } = await auth.supabase.from('checks').update({ status: decision }).eq('id', checkId).eq('status', 'pending').select('id')
+  if (error) return failure(error)
+  if (!data?.length) return { ok: false, error: 'not_allowed' }
+  revalidateMarketplace()
+  return { ok: true, id: checkId }
+}
+
 export async function reviewDocument(
   documentId: string,
   decision: 'approved' | 'rejected',

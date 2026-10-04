@@ -1,7 +1,8 @@
 'use client'
 
-import { Check, Undo2, X } from 'lucide-react'
+import { Check, ClipboardCheck, Undo2, X } from 'lucide-react'
 import { ActionButton } from '@/components/action-button'
+import { SellerCheckButton } from '@/components/device-check-dialog'
 import {
   cancelRequest,
   completeRequest,
@@ -43,9 +44,12 @@ export function SellerRequestActions({
   }
   if (status === 'accepted') {
     return (
-      <ActionButton {...m} variant="secondary" action={() => completeRequest(requestId)}>
-        {t.seller.markCompleted}
-      </ActionButton>
+      <div className="flex flex-wrap gap-2">
+        <ActionButton {...m} variant="secondary" action={() => completeRequest(requestId)}>
+          {t.seller.markCompleted}
+        </ActionButton>
+        <SellerCheckButton requestId={requestId} triggerType="pre_sale_handover" t={t} />
+      </div>
     )
   }
   return null
