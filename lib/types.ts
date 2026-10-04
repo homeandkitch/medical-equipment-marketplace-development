@@ -1,6 +1,7 @@
 export type UserRole = 'buyer' | 'seller' | 'admin'
 export type ListingType = 'sell' | 'rent' | 'donate'
-export type CertificationStatus = 'pending' | 'certified' | 'rejected'
+export type ListingStatus = 'pending_review' | 'active' | 'rejected'
+export type CertificationStatus = boolean
 export type Availability = 'available' | 'rented' | 'sold' | 'donated'
 export type RequestStatus =
   | 'pending'
@@ -36,7 +37,8 @@ export interface Listing {
   photos: string[]
   price: number | null
   governorate: string
-  certification_status: CertificationStatus
+  listing_status: ListingStatus
+  certification_status: boolean
   availability: Availability
   created_at: string
 }

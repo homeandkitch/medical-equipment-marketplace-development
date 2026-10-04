@@ -50,7 +50,10 @@ export function ListingCard({
             {governorateName(listing.governorate, locale)}
           </span>
         </div>
-        <StatusBadge status="certified" label={t.listings.certified} className="w-fit" />
+        <div className="flex flex-wrap gap-2">
+          {listing.listing_status === 'active' && <StatusBadge status="active" label={`${t.listings.active} / نشط`} className="w-fit" />}
+          {listing.certification_status && <StatusBadge status="certified" label={`${t.listings.certified} ✓ / معتمد`} className="w-fit" />}
+        </div>
       </div>
     </Link>
   )

@@ -6,6 +6,7 @@ import { ArrowLeft, CalendarDays, MapPin, ShieldCheck } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { RequestForm } from '@/components/request-form'
+import { SellerCheckButton } from '@/components/device-check-dialog'
 import { getCurrentProfile } from '@/lib/auth'
 import { formatDate, formatPrice, governorateName } from '@/lib/format'
 import { getDictionary } from '@/lib/i18n/server'
@@ -62,7 +63,10 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const [hero, ...rest] = listing.photos
   const isOwner = profile?.id === listing.seller_id
-  const bookable = listing.certification_status === 'certified' && listing.availability === 'available'
+  const bookable = listing.listing_status === 'active' && listing.availability === 'available'
+  const { data: pendingSellRequest } = isOwner && listing.type === 'sell'
+    ? await (await createClient()).from('requests').select('id').eq('listing_id', listing.id).eq('status', 'pending').maybeSingle()
+    : { data: null }
 
   let panel: React.ReactNode
   if (!profile) {
@@ -72,7 +76,15 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       </Link>
     )
   } else if (isOwner) {
-    panel = <p className="text-sm text-muted-foreground">{t.request.ownListing}</p>
+    panel = (
+      <div className="flex flex-wrap gap-2">
+        <Link href={`/listings/${listing.id}/edit`} className={buttonVariants({ size: 'lg' })}>Edit / تعديل</Link>
+        <Link href={`/dashboard/seller?listing=${listing.id}`} className={buttonVariants({ variant: 'outline', size: 'lg' })}>View requests / عرض الطلبات</Link>
+        {listing.type === 'sell' && pendingSellRequest?.id && (
+          <SellerCheckButton requestId={pendingSellRequest.id} triggerType="pre_sale_handover" t={t} />
+        )}
+      </div>
+    )
   } else if (profile.role !== 'buyer') {
     panel = <p className="text-sm text-muted-foreground">{t.request.sellersCannotRequest}</p>
   } else if (!bookable) {
@@ -120,9 +132,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                 {t.type[listing.type]}
               </span>
               <span className="text-xs text-muted-foreground">{t.device[listing.device_type]}</span>
-              {listing.certification_status === 'certified' && (
-                <StatusBadge status="certified" label={t.listings.certified} />
-              )}
+              {listing.listing_status === 'active' && <StatusBadge status="active" label={`${t.listings.active} / نشط`} />}
+              {listing.certification_status && <StatusBadge status="certified" label={`${t.listings.certified} ✓ / معتمد`} />}
             </div>
             <h1 className="text-3xl font-semibold text-balance">{listing.title}</h1>
             <p className="text-2xl font-semibold text-primary">

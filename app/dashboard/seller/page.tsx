@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 type RequestRow = MarketRequest & {
-  listing: Pick<Listing, 'id' | 'title'> | null
+  listing: Pick<Listing, 'id' | 'title' | 'type'> | null
   buyer: { full_name: string | null; email: string } | null
   validation_documents: { id: string; review_status: string }[]
 }
@@ -95,7 +95,10 @@ export default async function SellerDashboard() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <StatusBadge status={l.certification_status} label={t.certification[l.certification_status]} />
+                    <StatusBadge
+                      status={l.certification_status ? 'certified' : 'pending'}
+                      label={l.certification_status ? `${t.listings.certified} ✓ / معتمد` : `Pending / قيد المراجعة`}
+                    />
                     {used && <StatusBadge status={l.availability} label={t.availability[l.availability]} />}
                   </div>
                 </li>
@@ -144,7 +147,7 @@ export default async function SellerDashboard() {
                 {r.message && (
                   <p className="rounded-xl bg-muted px-3 py-2 text-sm text-pretty">{r.message}</p>
                 )}
-                <SellerRequestActions requestId={r.id} status={r.status} t={t} />
+                <SellerRequestActions requestId={r.id} status={r.status} listingType={r.listing?.type} t={t} />
               </li>
             ))}
           </ul>

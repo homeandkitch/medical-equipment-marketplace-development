@@ -23,16 +23,19 @@ function messages(t: Dictionary) {
 export function SellerRequestActions({
   requestId,
   status,
+  listingType,
   t,
 }: {
   requestId: string
   status: string
+  listingType?: 'sell' | 'rent' | 'donate'
   t: Dictionary
 }) {
   const m = messages(t)
   if (status === 'pending') {
     return (
       <div className="flex flex-wrap gap-2">
+        {listingType === 'sell' && <SellerCheckButton requestId={requestId} triggerType="pre_sale_handover" t={t} />}
         <ActionButton {...m} icon={<Check data-icon="inline-start" aria-hidden="true" />} action={() => respondToRequest(requestId, 'accepted')}>
           {t.seller.accept}
         </ActionButton>
