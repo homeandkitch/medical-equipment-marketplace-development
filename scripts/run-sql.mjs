@@ -9,7 +9,13 @@ const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: fals
 
 await client.connect()
 try {
-  await client.query(readFileSync(file, 'utf8'))
+  const sql = readFileSync(file, 'utf8')
+  // PostgreSQL requires newly-added enum values to be committed before they can be used.
+  // Migrations may opt into separate phases with this marker.
+  const phases = sql.split(/\n\s*-- MIGRATION_BOUNDARY\s*\n/g)
+  for (const phase of phases) {
+    if (phase.trim()) await client.query(phase)
+  }
   console.log(`Applied ${file}`)
 } finally {
   await client.end()

@@ -3,6 +3,8 @@ do $$ begin
   alter type public.request_status add value if not exists 'pending_seller_inspection';
 exception when duplicate_object then null; end $$;
 
+-- MIGRATION_BOUNDARY
+
 do $$ begin
   create type public.check_trigger_type as enum ('post_rental_return', 'pre_sale_handover', 'pre_purchase_inspection');
 exception when duplicate_object then null; end $$;
