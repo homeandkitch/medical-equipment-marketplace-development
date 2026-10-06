@@ -91,7 +91,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     panel = <p className="text-sm text-muted-foreground">{t.request.unavailable}</p>
   } else {
     panel = (
-      <RequestForm listingId={listing.id} userId={profile.id} isDonation={listing.type === 'donate'} t={t} />
+      <RequestForm listingId={listing.id} userId={profile.id} isDonation={listing.type === 'donate'} price={listing.price} locale={locale} t={t} />
     )
   }
 

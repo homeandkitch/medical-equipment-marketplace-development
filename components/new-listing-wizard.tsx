@@ -43,6 +43,7 @@ export function NewListingWizard({
   const [condition, setCondition] = useState('')
   const [photos, setPhotos] = useState<Photo[]>([])
   const [price, setPrice] = useState('')
+  const [deposit, setDeposit] = useState('')
   const [governorate, setGovernorate] = useState('')
 
   const n = t.newListing
@@ -59,7 +60,7 @@ export function NewListingWizard({
     if (step === 1) return type !== null
     if (step === 2) return title.trim().length > 2 && deviceType !== '' && condition.trim().length > 9
     if (step === 3) return photos.length > 0
-    return governorate !== '' && (!needsPrice || Number(price) > 0)
+    return governorate !== '' && (!needsPrice || Number(price) > 0) && (type !== 'rent' || Number(deposit) >= 0)
   }
 
   function addPhotos(files: FileList | null) {
@@ -101,6 +102,7 @@ export function NewListingWizard({
         condition_description: condition.trim(),
         photos: urls,
         price: needsPrice ? Number(price) : null,
+        deposit: type === 'rent' ? Number(deposit || 0) : null,
         governorate,
       })
       if (result.ok) {
@@ -258,6 +260,13 @@ export function NewListingWizard({
               </div>
             ) : (
               <p className="rounded-xl bg-muted px-4 py-3 text-sm text-pretty">{n.donationNote}</p>
+            )}
+            {type === 'rent' && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="deposit">Deposit / وديعة (EGP)</Label>
+                <Input id="deposit" type="number" min={0} step={1} value={deposit} onChange={(e) => setDeposit(e.target.value)} className="h-10" />
+                <p className="text-xs text-muted-foreground">Fully refundable and carries no platform fees. / تُرد كاملة ولا تُفرض عليها رسوم.</p>
+              </div>
             )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="gov">{n.governorate}</Label>

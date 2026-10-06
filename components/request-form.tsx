@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { createRequest } from '@/app/actions'
 import { createClient } from '@/lib/supabase/client'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import { calculateFees, formatEgp } from '@/lib/fees'
 
 const MAX_DOC_BYTES = 5 * 1024 * 1024
 
@@ -18,11 +19,15 @@ export function RequestForm({
   listingId,
   userId,
   isDonation,
+  price,
+  locale,
   t,
 }: {
   listingId: string
   userId: string
   isDonation: boolean
+  price: number | null
+  locale: 'ar' | 'en'
   t: Dictionary
 }) {
   const router = useRouter()
@@ -68,8 +73,18 @@ export function RequestForm({
     })
   }
 
+  const fees = price === null ? null : calculateFees(price)
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      {fees && (
+        <div className="rounded-xl border bg-muted/40 p-4 text-sm">
+          <p className="font-medium">Price breakdown / تفاصيل السعر</p>
+          <div className="mt-2 flex justify-between"><span>Base price / السعر الأساسي</span><span>{formatEgp(fees.basePrice, locale)}</span></div>
+          <div className="flex justify-between"><span>Service fee (4%) / رسوم الخدمة</span><span>{formatEgp(fees.buyerServiceFee, locale)}</span></div>
+          <div className="mt-2 flex justify-between border-t pt-2 font-semibold"><span>Total / الإجمالي</span><span>{formatEgp(fees.buyerTotal, locale)}</span></div>
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor="message">{t.request.message}</Label>
         <Textarea

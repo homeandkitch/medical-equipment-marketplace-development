@@ -36,6 +36,7 @@ export interface Listing {
   condition_description: string
   photos: string[]
   price: number | null
+  deposit: number | null
   governorate: string
   listing_status: ListingStatus
   certification_status: boolean

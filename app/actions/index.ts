@@ -8,6 +8,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { DeviceType, ListingType } from '@/lib/types'
+import { INSPECTION_FEE_EGP } from '@/lib/fees'
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string }
 
@@ -19,6 +20,7 @@ export interface CreateListingInput {
   photos: string[]
   price: number | null
   governorate: string
+  deposit: number | null
 }
 
 const AVAILABILITY_BY_TYPE: Record<ListingType, 'sold' | 'rented' | 'donated'> = {
@@ -65,6 +67,7 @@ export async function createListing(input: CreateListingInput): Promise<ActionRe
       photos: input.photos,
       price: input.type === 'donate' ? null : input.price,
       governorate: input.governorate,
+      deposit: input.type === 'rent' ? input.deposit : null,
       certification_status: 'pending',
     })
     .select('id')
@@ -185,6 +188,9 @@ export async function completeRequest(requestId: string): Promise<ActionResult> 
 
   if (availabilityError) return failure(availabilityError)
 
+  const { error: ledgerError } = await auth.supabase.rpc('record_request_completion', { p_request_id: requestId })
+  if (ledgerError) return failure(ledgerError)
+
   revalidateMarketplace()
   return { ok: true, id: requestId }
 }
@@ -232,6 +238,8 @@ export async function resolveDeviceCheck(checkId: string, decision: 'passed' | '
   const { data, error } = await auth.supabase.from('checks').update({ status: decision }).eq('id', checkId).eq('status', 'pending').select('id')
   if (error) return failure(error)
   if (!data?.length) return { ok: false, error: 'not_allowed' }
+  const { error: feeError } = await auth.supabase.rpc('record_inspection_fee', { p_check_id: checkId })
+  if (feeError) return failure(feeError)
   revalidateMarketplace()
   return { ok: true, id: checkId }
 }
