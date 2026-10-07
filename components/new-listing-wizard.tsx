@@ -12,7 +12,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { createListing } from '@/app/actions'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { DEVICE_TYPES, ACTIVE_GOVERNORATES, type DeviceType, type ListingType } from '@/lib/types'
+import { DEVICE_TYPES, ACTIVE_GOVERNORATES, type DeviceType, type ListingType, type RentPeriod } from '@/lib/types'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
 
 const MAX_PHOTOS = 6
@@ -43,12 +43,14 @@ export function NewListingWizard({
   const [condition, setCondition] = useState('')
   const [photos, setPhotos] = useState<Photo[]>([])
   const [price, setPrice] = useState('')
+  const [rentPeriods, setRentPeriods] = useState<RentPeriod[]>(['monthly'])
+  const [weeklyPrice, setWeeklyPrice] = useState('')
+  const [monthlyPrice, setMonthlyPrice] = useState('')
   const [deposit, setDeposit] = useState('')
   const [governorate, setGovernorate] = useState('')
 
   const n = t.newListing
   const steps = [n.stepType, n.stepDetails, n.stepPhotos, n.stepPrice]
-  const needsPrice = type === 'sell' || type === 'rent'
 
   const typeOptions = [
     { id: 'sell' as const, label: t.type.sell, desc: n.sellDesc, Icon: Tag },
@@ -60,7 +62,28 @@ export function NewListingWizard({
     if (step === 1) return type !== null
     if (step === 2) return title.trim().length > 2 && deviceType !== '' && condition.trim().length > 9
     if (step === 3) return photos.length > 0
-    return governorate !== '' && (!needsPrice || Number(price) > 0) && (type !== 'rent' || Number(deposit) >= 0)
+
+    const hasValidRentPrices =
+      rentPeriods.length > 0 &&
+      rentPeriods.every((period) => {
+        const value = Number(period === 'weekly' ? weeklyPrice : monthlyPrice)
+        return Number.isFinite(value) && value > 0
+      })
+
+    return (
+      governorate !== '' &&
+      (type === 'sell' ? Number(price) > 0 : type === 'rent' ? hasValidRentPrices : true) &&
+      (type !== 'rent' || Number(deposit || 0) >= 0)
+    )
+  }
+
+  function toggleRentPeriod(period: RentPeriod) {
+    setRentPeriods((current) => {
+      const next = current.includes(period)
+        ? current.filter((item) => item !== period)
+        : [...current, period]
+      return (['weekly', 'monthly'] as const).filter((item) => next.includes(item))
+    })
   }
 
   function addPhotos(files: FileList | null) {
@@ -101,7 +124,10 @@ export function NewListingWizard({
         device_type: deviceType,
         condition_description: condition.trim(),
         photos: urls,
-        price: needsPrice ? Number(price) : null,
+        price: type === 'sell' ? Number(price) : null,
+        rentPeriods: type === 'rent' ? rentPeriods : [],
+        rentWeeklyPrice: type === 'rent' && rentPeriods.includes('weekly') ? Number(weeklyPrice) : null,
+        rentMonthlyPrice: type === 'rent' && rentPeriods.includes('monthly') ? Number(monthlyPrice) : null,
         deposit: type === 'rent' ? Number(deposit || 0) : null,
         governorate,
       })
@@ -244,28 +270,93 @@ export function NewListingWizard({
 
         {step === 4 && (
           <>
-            {needsPrice ? (
+            {type === 'sell' && (
               <div className="flex flex-col gap-2">
-                <Label htmlFor="price">{type === 'rent' ? n.monthlyPrice : n.price}</Label>
+                <Label htmlFor="price">{n.price}</Label>
                 <Input
                   id="price"
                   type="number"
-                  inputMode="numeric"
-                  min={1}
-                  step={1}
+                  inputMode="decimal"
+                  min={0.01}
+                  step={0.01}
                   value={price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  onChange={(event) => setPrice(event.target.value)}
                   className="h-10"
                 />
               </div>
-            ) : (
+            )}
+            {type === 'rent' && (
+              <div className="flex flex-col gap-4">
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="text-sm font-medium">{n.rentalPeriods}</legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {([
+                      { period: 'weekly', label: n.weekly },
+                      { period: 'monthly', label: n.monthly },
+                    ] as const).map(({ period, label }) => {
+                      const checked = rentPeriods.includes(period)
+                      return (
+                        <label
+                          key={period}
+                          className={cn(
+                            'flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2',
+                            checked && 'border-primary bg-primary/5',
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleRentPeriod(period)}
+                            className="size-4 accent-primary"
+                          />
+                          <span className="text-sm font-medium">{label}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </fieldset>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {rentPeriods.includes('weekly') && (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="weekly-price">{n.weeklyPrice}</Label>
+                      <Input
+                        id="weekly-price"
+                        type="number"
+                        inputMode="decimal"
+                        min={0.01}
+                        step={0.01}
+                        value={weeklyPrice}
+                        onChange={(event) => setWeeklyPrice(event.target.value)}
+                        className="h-10"
+                      />
+                    </div>
+                  )}
+                  {rentPeriods.includes('monthly') && (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="monthly-price">{n.monthlyPrice}</Label>
+                      <Input
+                        id="monthly-price"
+                        type="number"
+                        inputMode="decimal"
+                        min={0.01}
+                        step={0.01}
+                        value={monthlyPrice}
+                        onChange={(event) => setMonthlyPrice(event.target.value)}
+                        className="h-10"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {type === 'donate' && (
               <p className="rounded-xl bg-muted px-4 py-3 text-sm text-pretty">{n.donationNote}</p>
             )}
             {type === 'rent' && (
               <div className="flex flex-col gap-2">
-                <Label htmlFor="deposit">Deposit / وديعة (EGP)</Label>
-                <Input id="deposit" type="number" min={0} step={1} value={deposit} onChange={(e) => setDeposit(e.target.value)} className="h-10" />
-                <p className="text-xs text-muted-foreground">Fully refundable and carries no platform fees. / تُرد كاملة ولا تُفرض عليها رسوم.</p>
+                <Label htmlFor="deposit">{n.deposit}</Label>
+                <Input id="deposit" type="number" min={0} step={0.01} value={deposit} onChange={(event) => setDeposit(event.target.value)} className="h-10" />
+                <p className="text-xs text-muted-foreground text-pretty">{n.depositNote}</p>
               </div>
             )}
             <div className="flex flex-col gap-2">

@@ -14,7 +14,7 @@ export function LocaleToggle({ locale, label }: { locale: Locale; label: string 
   return (
     <Button
       variant="ghost"
-      size="lg"
+      size="sm"
       disabled={pending}
       lang={next}
       onClick={() => {

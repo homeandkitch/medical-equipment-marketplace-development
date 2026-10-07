@@ -10,7 +10,8 @@ import { ListingImageGallery } from '@/components/listing-image-gallery'
 import { FeeBreakdown } from '@/components/fee-breakdown'
 import { SellerCheckButton } from '@/components/device-check-dialog'
 import { getCurrentProfile } from '@/lib/auth'
-import { formatDate, formatPrice, governorateName } from '@/lib/format'
+import { formatDate, formatListingPrice, governorateName } from '@/lib/format'
+import { formatEgp } from '@/lib/fees'
 import { getDictionary } from '@/lib/i18n/server'
 import { createClient } from '@/lib/supabase/server'
 import type { Listing } from '@/lib/types'
@@ -64,7 +65,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   if (!listing) notFound()
 
   const isOwner = profile?.id === listing.seller_id
-  const bookable = listing.listing_status === 'active' && listing.availability === 'available'
+  const bookable = listing.certification_status === 'certified' && listing.availability === 'available'
   const { data: pendingSellRequest } = isOwner && listing.type === 'sell'
     ? await (await createClient()).from('requests').select('id').eq('listing_id', listing.id).eq('status', 'pending').maybeSingle()
     : { data: null }
@@ -92,7 +93,17 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     panel = <p className="text-sm text-muted-foreground">{t.request.unavailable}</p>
   } else {
     panel = (
-      <RequestForm listingId={listing.id} userId={profile.id} isDonation={listing.type === 'donate'} price={listing.price} locale={locale} t={t} />
+      <RequestForm
+        listingId={listing.id}
+        userId={profile.id}
+        listingType={listing.type}
+        price={listing.price}
+        rentPeriods={listing.rent_period}
+        rentWeeklyPrice={listing.rent_weekly_price}
+        rentMonthlyPrice={listing.rent_monthly_price}
+        locale={locale}
+        t={t}
+      />
     )
   }
 
@@ -121,15 +132,39 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                 {t.type[listing.type]}
               </span>
               <span className="text-xs text-muted-foreground">{t.device[listing.device_type]}</span>
-              {listing.listing_status === 'active' && <StatusBadge status="active" label={`${t.listings.active} / نشط`} />}
-              {listing.certification_status && <StatusBadge status="certified" label={`${t.listings.certified} ✓ / معتمد`} />}
+              {listing.certification_status === 'certified' && (
+                <StatusBadge status="certified" label={t.listings.certified} />
+              )}
             </div>
             <h1 className="text-3xl font-semibold text-balance">{listing.title}</h1>
             <p className="text-2xl font-semibold text-primary">
-              {formatPrice(listing.price, listing.type, locale, t)}
+              {formatListingPrice(listing, locale, t)}
             </p>
-            {listing.type !== 'donate' && listing.price !== null && (
+            {listing.type === 'sell' && listing.price !== null && (
               <FeeBreakdown price={listing.price} locale={locale} t={t} />
+            )}
+            {listing.type === 'rent' && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(listing.rent_period ?? []).map((period) => {
+                  const rentPrice = period === 'weekly'
+                    ? listing.rent_weekly_price
+                    : listing.rent_monthly_price
+                  return rentPrice === null ? null : (
+                    <FeeBreakdown
+                      key={period}
+                      price={rentPrice}
+                      locale={locale}
+                      t={t}
+                      periodLabel={t.listings[period]}
+                    />
+                  )
+                })}
+              </div>
+            )}
+            {listing.type === 'rent' && (listing.deposit ?? 0) > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {t.listings.deposit}: {formatEgp(listing.deposit as number, locale)}
+              </p>
             )}
             <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">

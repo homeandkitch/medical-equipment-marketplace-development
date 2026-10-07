@@ -1,4 +1,5 @@
-import { GOVERNORATES, type ListingType } from './types'
+import { formatEgp } from './fees'
+import { GOVERNORATES, type Listing, type ListingType, type RentPeriod } from './types'
 import type { Dictionary, Locale } from './i18n/dictionaries'
 
 export function formatPrice(
@@ -14,6 +15,36 @@ export function formatPrice(
     maximumFractionDigits: 0,
   }).format(price)
   return type === 'rent' ? `${formatted} ${t.listings.perMonth}` : formatted
+}
+
+export function formatListingPrice(
+  listing: Pick<Listing, 'type' | 'price' | 'rent_weekly_price' | 'rent_monthly_price'>,
+  locale: Locale,
+  t: Dictionary,
+  selectedPeriod?: RentPeriod | null,
+) {
+  if (listing.type !== 'rent') return formatPrice(listing.price, listing.type, locale, t)
+
+  const prices: Record<RentPeriod, number | null> = {
+    weekly: listing.rent_weekly_price,
+    monthly: listing.rent_monthly_price,
+  }
+  const label = (period: RentPeriod) =>
+    period === 'weekly' ? t.listings.perWeek : t.listings.perMonth
+
+  if (selectedPeriod) {
+    const selectedPrice = prices[selectedPeriod]
+    return selectedPrice === null
+      ? t.listings.free
+      : `${formatEgp(selectedPrice, locale)} ${label(selectedPeriod)}`
+  }
+
+  const availableRates = (['weekly', 'monthly'] as const)
+    .filter((period) => prices[period] !== null)
+    .map((period) => `${formatEgp(prices[period] as number, locale)} ${label(period)}`)
+
+  if (availableRates.length > 0) return availableRates.join(' · ')
+  return listing.price === null ? t.listings.free : formatPrice(listing.price, 'rent', locale, t)
 }
 
 export function parseTimestamp(value: string | null | undefined): Date | null {

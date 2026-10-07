@@ -4,7 +4,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { BuyerCancelButton } from '@/components/request-actions'
 import { requireRole } from '@/lib/auth'
-import { formatDate, formatPrice, governorateName } from '@/lib/format'
+import { formatDate, formatListingPrice, governorateName } from '@/lib/format'
 import { getDictionary } from '@/lib/i18n/server'
 import { createClient } from '@/lib/supabase/server'
 import type { Listing, MarketRequest } from '@/lib/types'
@@ -62,7 +62,7 @@ export default async function BuyerDashboard() {
                 ) : null}
                 {r.listing && (
                   <p className="text-sm text-muted-foreground">
-                    {t.type[r.listing.type]} · {formatPrice(r.listing.price, r.listing.type, locale, t)} ·{' '}
+                    {t.type[r.listing.type]} · {formatListingPrice(r.listing, locale, t, r.rent_period)} ·{' '}
                     {governorateName(r.listing.governorate, locale)}
                   </p>
                 )}

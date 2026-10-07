@@ -13,6 +13,10 @@ alter table public.listings
   drop constraint rent_period_matches_type,
   drop constraint price_matches_type;
 
+-- The legacy transition guard rejects updates to terminal requests. Disable only this
+-- user trigger during the deterministic one-time period backfill, then restore it below.
+drop trigger if exists requests_guard_update on public.requests;
+
 update public.requests as r
 set rent_period = case l.rent_period
   when 'week' then 'weekly'::public.rent_period_option
@@ -141,6 +145,10 @@ begin
 end;
 $$;
 revoke all on function public.guard_request_update() from public, anon, authenticated;
+drop trigger if exists requests_guard_update on public.requests;
+create trigger requests_guard_update
+  before update on public.requests
+  for each row execute function public.guard_request_update();
 
 -- Fee rates mirror OWNER_COMMISSION_RATE and BUYER_SERVICE_FEE_RATE in lib/fees.ts.
 create or replace function public.complete_request_with_ledger(p_request_id uuid)

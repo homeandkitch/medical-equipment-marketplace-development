@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AdminDocumentActions, AdminListingActions } from '@/components/request-actions'
 import { requireRole } from '@/lib/auth'
-import { formatDate, formatPrice, governorateName } from '@/lib/format'
+import { formatDate, formatListingPrice, governorateName } from '@/lib/format'
 import { getDictionary } from '@/lib/i18n/server'
 import { createClient } from '@/lib/supabase/server'
 import type { Listing } from '@/lib/types'
@@ -93,7 +93,7 @@ export default async function AdminPage() {
                       {l.title}
                     </Link>
                     <p className="text-sm text-muted-foreground">
-                      {t.device[l.device_type]} · {t.type[l.type]} · {formatPrice(l.price, l.type, locale, t)} ·{' '}
+                      {t.device[l.device_type]} · {t.type[l.type]} · {formatListingPrice(l, locale, t)} ·{' '}
                       {governorateName(l.governorate, locale)}
                     </p>
                     <p className="line-clamp-2 text-sm text-muted-foreground text-pretty">

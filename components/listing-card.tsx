@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ImageOff, MapPin } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
-import { formatPrice, governorateName } from '@/lib/format'
+import { formatListingPrice, governorateName } from '@/lib/format'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
 import type { Listing } from '@/lib/types'
 
@@ -43,17 +43,18 @@ export function ListingCard({
         <h3 className="line-clamp-2 font-medium text-balance">{listing.title}</h3>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <span className="font-semibold text-primary">
-            {formatPrice(listing.price, listing.type, locale, t)}
+            {formatListingPrice(listing, locale, t)}
           </span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="size-3.5" aria-hidden="true" />
             {governorateName(listing.governorate, locale)}
           </span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {listing.listing_status === 'active' && <StatusBadge status="active" label={`${t.listings.active} / نشط`} className="w-fit" />}
-          {listing.certification_status && <StatusBadge status="certified" label={`${t.listings.certified} ✓ / معتمد`} className="w-fit" />}
-        </div>
+        {listing.certification_status === 'certified' && (
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge status="certified" label={t.listings.certified} className="w-fit" />
+          </div>
+        )}
       </div>
     </Link>
   )

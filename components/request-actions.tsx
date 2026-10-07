@@ -32,6 +32,12 @@ export function SellerRequestActions({
   t: Dictionary
 }) {
   const m = messages(t)
+  const acceptedInspectionTrigger = listingType === 'rent'
+    ? 'post_rental_return'
+    : listingType === 'sell'
+      ? 'pre_sale_handover'
+      : null
+
   if (status === 'pending') {
     return (
       <div className="flex flex-wrap gap-2">
@@ -51,7 +57,9 @@ export function SellerRequestActions({
         <ActionButton {...m} variant="secondary" action={() => completeRequest(requestId)}>
           {t.seller.markCompleted}
         </ActionButton>
-        <SellerCheckButton requestId={requestId} triggerType="pre_sale_handover" t={t} />
+        {acceptedInspectionTrigger && (
+          <SellerCheckButton requestId={requestId} triggerType={acceptedInspectionTrigger} t={t} />
+        )}
       </div>
     )
   }

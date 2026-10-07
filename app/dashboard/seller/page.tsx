@@ -4,11 +4,12 @@ import { Plus } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { SellerRequestActions } from '@/components/request-actions'
+import { SellerWallet } from '@/components/seller-wallet'
 import { requireRole } from '@/lib/auth'
-import { formatDate, formatPrice, governorateName } from '@/lib/format'
+import { formatDate, formatListingPrice, governorateName } from '@/lib/format'
 import { getDictionary } from '@/lib/i18n/server'
 import { createClient } from '@/lib/supabase/server'
-import type { Listing, MarketRequest } from '@/lib/types'
+import type { Listing, MarketRequest, WalletTransaction } from '@/lib/types'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary()
@@ -16,7 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 type RequestRow = MarketRequest & {
-  listing: Pick<Listing, 'id' | 'title' | 'type'> | null
+  listing: Pick<
+    Listing,
+    'id' | 'title' | 'type' | 'price' | 'rent_weekly_price' | 'rent_monthly_price'
+  > | null
   buyer: { full_name: string | null; email: string } | null
   validation_documents: { id: string; review_status: string }[]
 }
@@ -25,7 +29,7 @@ export default async function SellerDashboard() {
   const profile = await requireRole('seller', '/dashboard/seller')
   const [{ locale, t }, supabase] = await Promise.all([getDictionary(), createClient()])
 
-  const [listingsRes, requestsRes] = await Promise.all([
+  const [listingsRes, requestsRes, balanceRes, transactionsRes] = await Promise.all([
     supabase
       .from('listings')
       .select('*')
@@ -34,14 +38,28 @@ export default async function SellerDashboard() {
     supabase
       .from('requests')
       .select(
-        '*, listing:listings!inner(id, title, seller_id), buyer:users!requests_buyer_id_fkey(full_name, email), validation_documents(id, review_status)',
+        '*, listing:listings!inner(id, title, seller_id, type, price, rent_weekly_price, rent_monthly_price), buyer:users!requests_buyer_id_fkey(full_name, email), validation_documents(id, review_status)',
       )
       .eq('listing.seller_id', profile.id)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('wallet_balances')
+      .select('balance')
+      .eq('user_id', profile.id)
+      .maybeSingle(),
+    supabase
+      .from('wallet_transactions')
+      .select('id, user_id, type, amount, related_request_id, related_check_id, created_at')
+      .eq('user_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(12),
   ])
 
   const listings = (listingsRes.data ?? []) as Listing[]
   const requests = (requestsRes.data ?? []) as unknown as RequestRow[]
+  const walletBalance = balanceRes.error ? null : Number(balanceRes.data?.balance ?? 0)
+  const walletTransactions = (transactionsRes.data ?? []) as WalletTransaction[]
+  const walletHasError = Boolean(balanceRes.error || transactionsRes.error)
   const countByListing = new Map<string, number>()
   for (const r of requests) countByListing.set(r.listing_id, (countByListing.get(r.listing_id) ?? 0) + 1)
 
@@ -57,6 +75,14 @@ export default async function SellerDashboard() {
           {t.seller.newListing}
         </Link>
       </div>
+
+      <SellerWallet
+        balance={walletBalance}
+        transactions={walletTransactions}
+        hasError={walletHasError}
+        locale={locale}
+        t={t}
+      />
 
       <section aria-labelledby="my-listings" className="flex flex-col gap-4">
         <h2 id="my-listings" className="text-xl font-semibold">
@@ -86,7 +112,7 @@ export default async function SellerDashboard() {
                       {l.title}
                     </Link>
                     <p className="text-sm text-muted-foreground">
-                      {t.type[l.type]} · {formatPrice(l.price, l.type, locale, t)} ·{' '}
+                      {t.type[l.type]} · {formatListingPrice(l, locale, t)} ·{' '}
                       {governorateName(l.governorate, locale)}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -96,8 +122,8 @@ export default async function SellerDashboard() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge
-                      status={l.certification_status ? 'certified' : 'pending'}
-                      label={l.certification_status ? `${t.listings.certified} ✓ / معتمد` : `Pending / قيد المراجعة`}
+                      status={l.certification_status}
+                      label={t.certification[l.certification_status]}
                     />
                     {used && <StatusBadge status={l.availability} label={t.availability[l.availability]} />}
                   </div>
@@ -132,6 +158,11 @@ export default async function SellerDashboard() {
                       </span>{' '}
                       · {formatDate(r.created_at, locale)}
                     </p>
+                    {r.listing && r.listing.type !== 'donate' && (
+                      <p className="text-sm font-medium">
+                        {formatListingPrice(r.listing, locale, t, r.rent_period)}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge status={r.status} label={t.requestStatus[r.status]} />

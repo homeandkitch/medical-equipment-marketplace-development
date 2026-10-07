@@ -1,7 +1,15 @@
 export type UserRole = 'buyer' | 'seller' | 'admin'
 export type ListingType = 'sell' | 'rent' | 'donate'
-export type ListingStatus = 'pending_review' | 'active' | 'rejected'
-export type CertificationStatus = boolean
+export type RentPeriod = 'weekly' | 'monthly'
+export type WalletTransactionType =
+  | 'rental_earning'
+  | 'sale_earning'
+  | 'commission_deducted'
+  | 'service_fee_charged'
+  | 'inspection_fee_deducted'
+  | 'deposit_held'
+  | 'deposit_returned'
+export type CertificationStatus = 'pending' | 'certified' | 'rejected'
 export type Availability = 'available' | 'rented' | 'sold' | 'donated'
 export type RequestStatus =
   | 'pending'
@@ -36,10 +44,12 @@ export interface Listing {
   condition_description: string
   photos: string[]
   price: number | null
+  rent_period: RentPeriod[] | null
+  rent_weekly_price: number | null
+  rent_monthly_price: number | null
   deposit: number | null
   governorate: string
-  listing_status: ListingStatus
-  certification_status: boolean
+  certification_status: CertificationStatus
   availability: Availability
   created_at: string
 }
@@ -49,7 +59,18 @@ export interface MarketRequest {
   listing_id: string
   buyer_id: string
   status: RequestStatus
+  rent_period: RentPeriod | null
   message: string | null
+  created_at: string
+}
+
+export interface WalletTransaction {
+  id: string
+  user_id: string | null
+  type: WalletTransactionType
+  amount: number
+  related_request_id: string | null
+  related_check_id: string | null
   created_at: string
 }
 

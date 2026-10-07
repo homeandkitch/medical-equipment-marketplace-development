@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t.listings.title, description: t.listings.subtitle }
 }
 
-type SearchParams = { governorate?: string; category?: string; type?: string; certified?: string }
+type SearchParams = { governorate?: string; category?: string; type?: string }
 
 export default async function ListingsPage({
   searchParams,
@@ -29,7 +29,7 @@ export default async function ListingsPage({
   let query = supabase
     .from('listings')
     .select('*')
-    .eq('listing_status', 'active')
+    .eq('certification_status', 'certified')
     .eq('availability', 'available')
     .order('created_at', { ascending: false })
 
@@ -42,13 +42,9 @@ export default async function ListingsPage({
   if (params.type && LISTING_TYPES.includes(params.type as never)) {
     query = query.eq('type', params.type)
   }
-  if (params.certified === 'true') {
-    query = query.eq('certification_status', true)
-  }
-
   const { data } = await query
   const listings = (data ?? []) as Listing[]
-  const hasFilters = Boolean(params.governorate || params.category || params.type || params.certified)
+  const hasFilters = Boolean(params.governorate || params.category || params.type)
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10">
@@ -92,13 +88,6 @@ export default async function ListingsPage({
                 {t.type[x]}
               </NativeSelectOption>
             ))}
-          </NativeSelect>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="certified">{t.listings.certifiedOnly}</Label>
-          <NativeSelect id="certified" name="certified" defaultValue={params.certified ?? ''} className="w-full [&_select]:h-10">
-            <NativeSelectOption value="">{t.listings.active}</NativeSelectOption>
-            <NativeSelectOption value="true">{t.listings.certifiedOnly}</NativeSelectOption>
           </NativeSelect>
         </div>
         <div className="flex gap-2">

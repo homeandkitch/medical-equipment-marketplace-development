@@ -23,8 +23,8 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-foreground">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold text-foreground">
           <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <HeartHandshake className="size-4" aria-hidden="true" />
           </span>
@@ -43,7 +43,7 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        <div className="ms-auto flex items-center gap-2">
+        <div className="ms-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <LocaleToggle locale={locale} label={t.nav.language} />
           {profile?.role === 'seller' && (
             <Link href="/listings/new" className={cn(buttonVariants({ size: 'lg' }), 'hidden sm:inline-flex')}>
@@ -54,10 +54,10 @@ export async function SiteHeader() {
             <SignOutButton label={t.nav.logout} />
           ) : (
             <>
-              <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'lg' })}>
+              <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
                 {t.nav.login}
               </Link>
-              <Link href="/signup" className={buttonVariants({ size: 'lg' })}>
+              <Link href="/signup" className={buttonVariants({ size: 'sm' })}>
                 {t.nav.signup}
               </Link>
             </>

@@ -9,30 +9,55 @@ import { FeeBreakdown } from '@/components/fee-breakdown'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { createRequest } from '@/app/actions'
 import { createClient } from '@/lib/supabase/client'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
+import type { ListingType, RentPeriod } from '@/lib/types'
 
 const MAX_DOC_BYTES = 5 * 1024 * 1024
 
 export function RequestForm({
   listingId,
   userId,
-  isDonation,
+  listingType,
   price,
+  rentPeriods,
+  rentWeeklyPrice,
+  rentMonthlyPrice,
   locale,
   t,
 }: {
   listingId: string
   userId: string
-  isDonation: boolean
+  listingType: ListingType
   price: number | null
+  rentPeriods: RentPeriod[] | null
+  rentWeeklyPrice: number | null
+  rentMonthlyPrice: number | null
   locale: 'ar' | 'en'
   t: Dictionary
 }) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const [selectedRentPeriod, setSelectedRentPeriod] = useState<RentPeriod | ''>(() =>
+    rentPeriods?.includes('monthly') ? 'monthly' : rentPeriods?.[0] ?? '',
+  )
+  const selectedPrice = listingType === 'rent'
+    ? selectedRentPeriod === 'weekly'
+      ? rentWeeklyPrice
+      : selectedRentPeriod === 'monthly'
+        ? rentMonthlyPrice
+        : null
+    : listingType === 'sell'
+      ? price
+      : null
+  const periodLabel = selectedRentPeriod === 'weekly'
+    ? t.listings.weekly
+    : selectedRentPeriod === 'monthly'
+      ? t.listings.monthly
+      : undefined
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,7 +66,7 @@ export function RequestForm({
     const message = String(form.get('message') ?? '').trim() || null
     setError(null)
 
-    if (isDonation && (!file || file.size === 0)) {
+    if (listingType === 'donate' && (!file || file.size === 0)) {
       setError(t.newListing.required)
       return
     }
@@ -63,7 +88,12 @@ export function RequestForm({
         }
         documentPath = path
       }
-      const result = await createRequest({ listingId, message, documentPath })
+      const result = await createRequest({
+        listingId,
+        message,
+        documentPath,
+        rentPeriod: listingType === 'rent' ? selectedRentPeriod || null : null,
+      })
       if (result.ok) {
         toast.success(t.request.sent)
         setSubmitted(true)
@@ -80,7 +110,9 @@ export function RequestForm({
           <h3 className="font-semibold">{t.request.sent}</h3>
           <p className="text-sm text-muted-foreground">{t.request.confirmationBody}</p>
         </div>
-        {price !== null && <FeeBreakdown price={price} locale={locale} t={t} />}
+        {selectedPrice !== null && (
+          <FeeBreakdown price={selectedPrice} locale={locale} t={t} periodLabel={periodLabel} />
+        )}
         <Link href="/dashboard/buyer" className={buttonVariants({ variant: 'outline' })}>
           {t.request.viewRequests}
         </Link>
@@ -90,6 +122,30 @@ export function RequestForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      {listingType === 'rent' && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="rent-period">{t.request.rentalPeriod}</Label>
+          <NativeSelect
+            id="rent-period"
+            value={selectedRentPeriod}
+            onChange={(event) => setSelectedRentPeriod(event.target.value as RentPeriod)}
+            className="w-full"
+            required
+          >
+            <NativeSelectOption value="" disabled>
+              {t.request.rentalPeriod}
+            </NativeSelectOption>
+            {(rentPeriods ?? []).map((period) => (
+              <NativeSelectOption key={period} value={period}>
+                {t.listings[period]}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
+      {selectedPrice !== null && (
+        <FeeBreakdown price={selectedPrice} locale={locale} t={t} periodLabel={periodLabel} />
+      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor="message">{t.request.message}</Label>
         <Textarea
@@ -100,7 +156,7 @@ export function RequestForm({
           placeholder={t.request.messagePlaceholder}
         />
       </div>
-      {isDonation && (
+      {listingType === 'donate' && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="document">{t.request.docLabel}</Label>
           <Input id="document" name="document" type="file" accept="image/*,application/pdf" required className="h-10" />
@@ -112,7 +168,12 @@ export function RequestForm({
           {error}
         </p>
       )}
-      <Button type="submit" size="lg" className="h-10" disabled={pending}>
+      <Button
+        type="submit"
+        size="lg"
+        className="h-10"
+        disabled={pending || (listingType === 'rent' && selectedPrice === null)}
+      >
         {pending && <Loader2 className="animate-spin" aria-hidden="true" />}
         {t.request.send}
       </Button>
