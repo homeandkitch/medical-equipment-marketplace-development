@@ -6,6 +6,8 @@ import { ArrowLeft, CalendarDays, MapPin, ShieldCheck } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { RequestForm } from '@/components/request-form'
+import { ListingImageGallery } from '@/components/listing-image-gallery'
+import { FeeBreakdown } from '@/components/fee-breakdown'
 import { SellerCheckButton } from '@/components/device-check-dialog'
 import { getCurrentProfile } from '@/lib/auth'
 import { formatDate, formatPrice, governorateName } from '@/lib/format'
@@ -61,7 +63,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   ])
   if (!listing) notFound()
 
-  const [hero, ...rest] = listing.photos
   const isOwner = profile?.id === listing.seller_id
   const bookable = listing.listing_status === 'active' && listing.availability === 'available'
   const { data: pendingSellRequest } = isOwner && listing.type === 'sell'
@@ -106,24 +107,12 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <section aria-label={t.newListing.photos} className="flex flex-col gap-3">
-          <div className="aspect-[4/3] overflow-hidden rounded-2xl border bg-muted">
-            {hero && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={hero} alt={listing.title} className="size-full object-cover" />
-            )}
-          </div>
-          {rest.length > 0 && (
-            <ul className="grid grid-cols-4 gap-3">
-              {rest.map((src, i) => (
-                <li key={src} className="aspect-square overflow-hidden rounded-xl border bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt={`${listing.title} ${i + 2}`} loading="lazy" className="size-full object-cover" />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <ListingImageGallery
+          photos={listing.photos}
+          title={listing.title}
+          locale={locale}
+          sectionLabel={t.newListing.photos}
+        />
 
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
@@ -139,6 +128,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <p className="text-2xl font-semibold text-primary">
               {formatPrice(listing.price, listing.type, locale, t)}
             </p>
+            {listing.type !== 'donate' && listing.price !== null && (
+              <FeeBreakdown price={listing.price} locale={locale} t={t} />
+            )}
             <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <MapPin className="size-4" aria-hidden="true" />

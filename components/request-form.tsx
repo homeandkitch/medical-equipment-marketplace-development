@@ -1,17 +1,17 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { FeeBreakdown } from '@/components/fee-breakdown'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { createRequest } from '@/app/actions'
 import { createClient } from '@/lib/supabase/client'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
-import { calculateFees, formatEgp } from '@/lib/fees'
 
 const MAX_DOC_BYTES = 5 * 1024 * 1024
 
@@ -30,9 +30,9 @@ export function RequestForm({
   locale: 'ar' | 'en'
   t: Dictionary
 }) {
-  const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [submitted, setSubmitted] = useState(false)
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -66,25 +66,30 @@ export function RequestForm({
       const result = await createRequest({ listingId, message, documentPath })
       if (result.ok) {
         toast.success(t.request.sent)
-        router.push('/dashboard/buyer')
+        setSubmitted(true)
       } else {
         toast.error(result.error === 'not_implemented' ? t.common.notImplemented : t.auth.unexpected)
       }
     })
   }
 
-  const fees = price === null ? null : calculateFees(price)
+  if (submitted) {
+    return (
+      <section role="status" aria-live="polite" className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="font-semibold">{t.request.sent}</h3>
+          <p className="text-sm text-muted-foreground">{t.request.confirmationBody}</p>
+        </div>
+        {price !== null && <FeeBreakdown price={price} locale={locale} t={t} />}
+        <Link href="/dashboard/buyer" className={buttonVariants({ variant: 'outline' })}>
+          {t.request.viewRequests}
+        </Link>
+      </section>
+    )
+  }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      {fees && (
-        <div className="rounded-xl border bg-muted/40 p-4 text-sm">
-          <p className="font-medium">Price breakdown / تفاصيل السعر</p>
-          <div className="mt-2 flex justify-between"><span>Base price / السعر الأساسي</span><span>{formatEgp(fees.basePrice, locale)}</span></div>
-          <div className="flex justify-between"><span>Service fee (4%) / رسوم الخدمة</span><span>{formatEgp(fees.buyerServiceFee, locale)}</span></div>
-          <div className="mt-2 flex justify-between border-t pt-2 font-semibold"><span>Total / الإجمالي</span><span>{formatEgp(fees.buyerTotal, locale)}</span></div>
-        </div>
-      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor="message">{t.request.message}</Label>
         <Textarea
